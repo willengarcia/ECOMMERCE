@@ -2,6 +2,8 @@
 import Image from "next/image";
 import { useState } from "react"
 import Link from "next/link";
+import { Filter } from "lucide-react";
+import MenuInferior from "@/app/navegador/nav";
 import { Heart, Home, ShoppingCart, Search, User } from "lucide-react"
 
 export default function CasaLar() {
@@ -40,7 +42,7 @@ export default function CasaLar() {
       </div>
 
       {/* Ícone do carrinho */}
-      <ShoppingCart className="w-5 h-5 text-gray-700" />
+      <Filter className="w-5 h-5 text-gray-700" />
     </header>
 
       {/* Barra de busca */}
@@ -90,24 +92,7 @@ export default function CasaLar() {
       </main>
 
       {/* Menu inferior */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm flex justify-around py-2">
-        <button className="flex flex-col items-center text-blue-600">
-          <Home className="w-5 h-5" />
-          <span className="text-xs">Home</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-500">
-          <Heart className="w-5 h-5" />
-          <span className="text-xs">Favoritos</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-500">
-          <ShoppingCart className="w-5 h-5" />
-          <span className="text-xs">Carrinho</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-500">
-          <User className="w-5 h-5" />
-          <span className="text-xs">Perfil</span>
-        </button>
-      </nav>
+      <MenuInferior></MenuInferior>
     </div>
   )
 }
