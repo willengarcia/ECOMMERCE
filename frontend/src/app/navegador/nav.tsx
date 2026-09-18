@@ -1,54 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Heart, ShoppingCart, User } from "lucide-react";
-
+import { Grid2X2, Heart, Home, ShoppingCart, User } from "lucide-react";
+const links = [{ href: "/", label: "Home", icon: Home }, { href: "/favoritos", label: "Favoritos", icon: Heart }, { href: "/categorias", label: "Categorias", icon: Grid2X2 }, { href: "/carrinho", label: "Carrinho", icon: ShoppingCart }, { href: "/perfil", label: "Perfil", icon: User }];
 export default function MenuInferior() {
   const pathname = usePathname();
-
-  const isActive = (path: string) => pathname === path;
-
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm flex justify-around py-2">
-      <Link
-        href="/"
-        className={`flex flex-col items-center ${
-          isActive("/") ? "text-blue-600" : "text-gray-500"
-        }`}
-      >
-        <Home className="w-5 h-5" />
-        <span className="text-xs">Home</span>
-      </Link>
-
-      <Link
-        href="/favoritos"
-        className={`flex flex-col items-center ${
-          isActive("/favoritos") ? "text-blue-600" : "text-gray-500"
-        }`}
-      >
-        <Heart className="w-5 h-5" />
-        <span className="text-xs">Favoritos</span>
-      </Link>
-
-      <Link
-        href="/carrinho"
-        className={`flex flex-col items-center ${
-          isActive("/carrinho") ? "text-blue-600" : "text-gray-500"
-        }`}
-      >
-        <ShoppingCart className="w-5 h-5" />
-        <span className="text-xs">Carrinho</span>
-      </Link>
-
-      <Link
-        href="/perfil"
-        className={`flex flex-col items-center ${
-          isActive("/perfil") ? "text-blue-600" : "text-gray-500"
-        }`}
-      >
-        <User className="w-5 h-5" />
-        <span className="text-xs">Perfil</span>
-      </Link>
-    </nav>
-  );
+  return <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto flex h-[78px] max-w-[720px] items-center justify-around border-t border-slate-200/80 bg-white/95 px-1 backdrop-blur">{links.map(({ href, label, icon: Icon }, index) => { const active = pathname === href || (href !== "/" && pathname.startsWith(href)); return <Link key={`${label}-${index}`} href={href} className={`flex min-w-14 flex-col items-center gap-1 rounded-xl px-2 py-1.5 text-[11px] font-medium transition ${active ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:text-slate-800"}`}><Icon size={21} strokeWidth={active ? 2.5 : 2} /><span>{label}</span></Link>; })}</nav>;
 }

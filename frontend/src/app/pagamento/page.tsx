@@ -1,130 +1,28 @@
 "use client";
-import { useState } from "react";
-import { ArrowLeft, Lock } from "lucide-react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, CheckCircle2, FlaskConical, Lock, ShieldCheck } from "lucide-react";
+import { money } from "@/lib/catalog";
+import { createPayment } from "@/lib/api";
 
-export default function Pagamento({ onClose, subtotal }: any) {
-  const [metodo, setMetodo] = useState("cartao");
-
-  const total = subtotal ?? 1234.56;
-
-  return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      {/* Header */}
-      <header className="p-4 flex items-center bg-white shadow-sm">
-        <button
-          onClick={onClose}
-          className="p-1 text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="flex-1 text-center text-lg font-semibold text-gray-800">
-          Finalizar Compra
-        </h1>
-      </header>
-
-      {/* Conteúdo principal */}
-      <main className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-        {/* Resumo */}
-        <section>
-          <h2 className="text-sm font-medium text-gray-700 mb-2">
-            Resumo do Pedido
-          </h2>
-          <div className="bg-white rounded-xl p-4 shadow-sm space-y-2">
-            <div className="flex justify-between text-gray-700 text-sm">
-              <span>Subtotal</span>
-              <span>
-                R${" "}
-                {subtotal?.toLocaleString("pt-BR", {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-            <div className="border-t pt-2 flex justify-between font-semibold text-gray-800">
-              <span>Total</span>
-              <span>
-                R${" "}
-                {total?.toLocaleString("pt-BR", {
-                  minimumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Métodos de Pagamento */}
-        <section>
-          <h2 className="text-sm font-medium text-gray-700 mb-2">
-            Escolha a forma de pagamento
-          </h2>
-          <div className="flex bg-gray-100 rounded-xl p-1 text-sm font-medium">
-            {["boleto", "cartao", "pix"].map((m) => (
-              <button
-                key={m}
-                onClick={() => setMetodo(m)}
-                className={`flex-1 py-2 rounded-lg transition ${
-                  metodo === m
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500"
-                }`}
-              >
-                {m === "boleto" && "Boleto"}
-                {m === "cartao" && "Cartão de Crédito"}
-                {m === "pix" && "Pix"}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Formulário - Cartão */}
-        {metodo === "cartao" && (
-          <section className="bg-white border rounded-xl p-4 space-y-3 shadow-sm">
-            <input
-              type="text"
-              placeholder="0000 0000 0000 0000"
-              className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              placeholder="Seu Nome Completo"
-              className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="MM/AA"
-                className="flex-1 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                type="text"
-                placeholder="CVV"
-                className="w-24 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </section>
-        )}
-
-        {/* Pix */}
-        {metodo === "pix" && (
-          <section className="bg-white border rounded-xl p-4 shadow-sm text-center text-gray-600 text-sm">
-            Escaneie o QR Code gerado após clicar em “Finalizar Compra”.
-          </section>
-        )}
-
-        {/* Boleto */}
-        {metodo === "boleto" && (
-          <section className="bg-white border rounded-xl p-4 shadow-sm text-center text-gray-600 text-sm">
-            O boleto será gerado após clicar em “Finalizar Compra”.
-          </section>
-        )}
-      </main>
-
-      {/* Botão fixo no rodapé */}
-      <footer className="p-4 bg-white border-t shadow-lg">
-        <button className="w-full bg-blue-600 text-white py-3 rounded-full font-medium flex items-center justify-center space-x-2">
-          <Lock className="w-4 h-4" />
-          <span>Finalizar Compra</span>
-        </button>
-      </footer>
-    </div>
-  );
+function Checkout() {
+  const router = useRouter(); const params = useSearchParams();
+  const total = Number(params.get("total")); const orderId = Number(params.get("orderId"));
+  const orderStatus = params.get("orderStatus") || "AGUARDANDO_PAGAMENTO"; const created = params.get("created") === "1";
+  const [method, setMethod] = useState("CARTAO"); const [status, setStatus] = useState(""); const [processing, setProcessing] = useState(false);
+  async function finish() { if (!orderId) return setStatus("Pedido não informado pelo backend."); setProcessing(true); setStatus(""); try { const result = await createPayment(orderId, method); setStatus(`Solicitação registrada no ambiente de homologação. Status: ${result.status.replaceAll("_", " ")}.`); } catch (error) { setStatus(error instanceof Error ? error.message : "Não foi possível registrar a solicitação de pagamento."); } finally { setProcessing(false); } }
+  return <div className="app-shell pb-8">
+    <header className="relative flex items-center border-b border-slate-200/70 bg-white px-5 py-5"><button onClick={() => router.back()} aria-label="Voltar"><ArrowLeft size={26} /></button><h1 className="absolute left-1/2 -translate-x-1/2 text-xl font-black">Checkout</h1><span className="env-badge ml-auto">HOMOLOGAÇÃO</span></header>
+    <div className="mx-5 my-4 flex items-center justify-between text-[10px] font-semibold text-slate-400"><span>PRODUTOS</span><span>→</span><span>ENDEREÇO</span><span>→</span><span>CHECKOUT</span><span>→</span><span className="text-blue-600">PAGAMENTO</span></div>
+    <main className="space-y-5 px-5">
+      {created && <div className="status-box status-success flex items-start gap-3"><CheckCircle2 className="mt-0.5 shrink-0" size={19} /><div><strong>Pedido criado com sucesso no ambiente de homologação.</strong><p className="mt-1 text-xs opacity-80">Pedido #{orderId}</p></div></div>}
+      <section><h2 className="mb-3 text-lg font-black">Resumo do pedido</h2><div className="card p-5"><div className="flex justify-between py-1 text-sm text-slate-500"><span>Produtos</span><span>{money(total)}</span></div><div className="flex justify-between py-1 text-sm text-slate-500"><span>Entrega</span><span>{money(0)}</span></div><div className="mt-3 flex justify-between border-t pt-4 text-xl font-black"><span>Total</span><span className="text-blue-700">{money(total)}</span></div><div className="mt-4"><span className="block text-xs font-semibold uppercase tracking-wider text-slate-400">Status</span><p className="mt-1 inline-flex rounded-full bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-700">{orderStatus.replaceAll("_", " ")}</p></div></div></section>
+      <div className="homolog-banner flex items-start gap-3"><FlaskConical className="mt-0.5 shrink-0 text-blue-600" size={20} /><div><strong>Pagamento em ambiente de homologação</strong><p className="mt-1 text-sm">Nenhuma cobrança real será realizada.</p><p className="mt-1 text-xs text-slate-500">A integração do gateway está em desenvolvimento e validação.</p></div></div>
+      <section><h2 className="mb-3 text-lg font-black">Forma de pagamento para teste</h2><div className="grid grid-cols-3 rounded-xl bg-slate-100 p-1">{[["BOLETO","Boleto"],["CARTAO","Cartão"],["PIX","Pix"]].map(([value,label]) => <button key={value} onClick={() => setMethod(value)} className={`rounded-lg py-2.5 text-sm transition ${method === value ? "bg-white font-bold text-blue-600 shadow-sm" : "text-slate-500"}`}>{label}</button>)}</div></section>
+      {method === "CARTAO" ? <section className="card space-y-4 p-5"><p className="flex items-center gap-2 text-xs text-slate-500"><ShieldCheck size={16} />Utilize apenas dados de teste.</p><label className="block text-sm font-medium">Número do cartão<input className="field mt-2" placeholder="0000 0000 0000 0000" inputMode="numeric" /></label><label className="block text-sm font-medium">Nome no cartão<input className="field mt-2" placeholder="Nome para teste" /></label><div className="grid grid-cols-2 gap-4"><label className="text-sm font-medium">Validade<input className="field mt-2" placeholder="MM/AA" /></label><label className="text-sm font-medium">CVV<input className="field mt-2" placeholder="000" inputMode="numeric" /></label></div></section> : <section className="card p-5 text-center text-sm text-slate-600">A geração de {method === "PIX" ? "QR Code" : "boleto"} está em desenvolvimento para este ambiente.</section>}
+      <button onClick={finish} disabled={processing} className="primary-button"><Lock size={19} />{processing ? "Registrando..." : "Continuar para pagamento"}</button>
+      {status && <p role="status" className={`status-box ${status.includes("registrada") ? "status-success" : "status-error"}`}>{status}</p>}
+    </main>
+  </div>;
 }
+export default function Pagamento() { return <Suspense><Checkout /></Suspense>; }
